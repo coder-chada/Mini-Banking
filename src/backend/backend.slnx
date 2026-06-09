@@ -3,6 +3,6 @@
     <Project Path="DomainLogic/DomainLogic.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="../../tests/DomainLogic.Test/DomainLogic.Test.csproj" />
+    <Project Path="../../tests/DomainLogic.UnitTests/DomainLogic.UnitTests.csproj" />
   </Folder>
 </Solution>
