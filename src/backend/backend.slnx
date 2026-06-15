@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/core/">
+    <Project Path="ApplicationService/ApplicationService.csproj" />
     <Project Path="DomainLogic/DomainLogic.csproj" />
   </Folder>
   <Folder Name="/tests/">

@@ -18,7 +18,12 @@ namespace DomainLogic.Entities
 
         }
 
-        public Account(int id, string numero, AccountType tipo, CurrencyType currency, int ownerID, decimal balance) : base(id)
+        public Account(string numero,
+                       AccountType tipo,
+                       CurrencyType currency,
+                       int ownerID,
+                       decimal balance,
+                       int id = 0) : base(id)
         {
             if (string.IsNullOrWhiteSpace(numero))
                 throw new DomainLogicException(DomainLogicErrorCode.EntityInvalidData, "Account number is required.");

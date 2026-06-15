@@ -99,7 +99,12 @@ namespace DomainLogic.Test.Entities
             string emptyAccountNumber = string.Empty;
 
             // Act
-            Action act = () => new Account(1, emptyAccountNumber, AccountType.Ahorro, CurrencyType.USD, 1, 0);
+            Action act = () => new Account(id: 1,
+                                           numero: emptyAccountNumber,
+                                           tipo: AccountType.Ahorro,
+                                           currency: CurrencyType.USD,
+                                           ownerID: 1,
+                                           balance: 0);
 
             // Assert
             var domainException = Assert.Throws<DomainLogicException>(act);
@@ -113,7 +118,12 @@ namespace DomainLogic.Test.Entities
             int invalidOwnerId = 0;
 
             // Act
-            Action act = () => new Account(1, "ACC-001", AccountType.Corriente, CurrencyType.USD, invalidOwnerId, 0);
+            Action act = () => new Account(id: 1,
+                                           numero: "ACC-001",
+                                           tipo: AccountType.Corriente,
+                                           currency: CurrencyType.USD,
+                                           ownerID: invalidOwnerId,
+                                           balance: 0);
 
             // Assert
             var exception = Assert.Throws<DomainLogicException>(act);
@@ -127,7 +137,12 @@ namespace DomainLogic.Test.Entities
             int invalidOwnerId = -1;
 
             // Act
-            Action act = () => new Account(1, "ACC-001", AccountType.Ahorro, CurrencyType.USD, invalidOwnerId, 0);
+            Action act = () => new Account(id: 1,
+                                           numero: "ACC-001",
+                                           tipo: AccountType.Ahorro,
+                                           currency: CurrencyType.USD,
+                                           ownerID: invalidOwnerId,
+                                           balance: 0);
 
             // Assert
             var exception = Assert.Throws<DomainLogicException>(act);

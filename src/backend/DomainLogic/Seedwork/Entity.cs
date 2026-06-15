@@ -4,7 +4,12 @@
     {
         public int Id { get; set; }
 
-        public Entity(int id)
+        protected Entity()
+        {
+            
+        }
+
+        protected Entity(int id)
         {
             this.Id = id;
         }
