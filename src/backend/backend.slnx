@@ -2,6 +2,7 @@
   <Folder Name="/core/">
     <Project Path="ApplicationService/ApplicationService.csproj" />
     <Project Path="DomainLogic/DomainLogic.csproj" />
+    <Project Path="Infrastructure/Infrastructure.csproj" Id="9b1627a8-ece6-455b-9c1a-fb3794785c28" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="../../tests/DomainLogic.UnitTests/DomainLogic.UnitTests.csproj" />
