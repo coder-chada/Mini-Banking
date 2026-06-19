@@ -1,7 +1,7 @@
-﻿using DomainLogic.Exceptions;
+﻿using Domain.Enums;
+using DomainLogic.Exceptions;
 using DomainLogic.Seedwork;
 using DomainLogic.ValueObjects;
-using Mini_Banking.Domain.Enums;
 
 namespace DomainLogic.Entities
 {

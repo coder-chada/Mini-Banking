@@ -1,6 +1,6 @@
 namespace ApplicationService.Users.DTOs;
 
-public record CreateUserDTO(
+public record CreateUserRequest(
     string DNI,
     string Nombres,
     string Apellidos,

@@ -4,7 +4,7 @@ namespace ApplicationService.Users.Contracts
 {
     public interface IUserService
     {
-        Task<int> CreateUserAsync(CreateUserDTO userDTO,
-                                  CancellationToken cancellationToken = default);
+        Task<CreateUserResponse> CreateUserAsync(CreateUserRequest userDTO,
+                                                 CancellationToken cancellationToken = default);
     }
 }

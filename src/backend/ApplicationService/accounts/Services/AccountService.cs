@@ -15,8 +15,8 @@ namespace ApplicationService.Accounts.Services
             this._unitOfWork = unitOfWork;
         }
 
-        public async Task<CreateAccountDTOResponse> CreateAccountAsync(CreateAccountDTO accountDTO,
-                                                                       CancellationToken cancellation = default)
+        public async Task<CreateAccountDTOResponse> CreateAccountAsync(CreateAccountDTORequest accountDTO,
+                                                                       CancellationToken cancellationToken = default)
         {
             var account = new Account(numero: accountDTO.Numero,
                                       tipo: accountDTO.Tipo,
@@ -24,11 +24,16 @@ namespace ApplicationService.Accounts.Services
                                       ownerID: accountDTO.OwnerID,
                                       balance: 0);
                 
-            var rowsAffected = await _unitOfWork.AccountRepository
-                .AddAccountAsync(account, cancellation)
+            var newAccountID = await _unitOfWork
+                .AccountRepository
+                .AddAccountAsync(account, cancellationToken)
                 .ConfigureAwait(false);
 
-            var response = new CreateAccountDTOResponse(rowsAffected);
+            await _unitOfWork
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var response = new CreateAccountDTOResponse(newAccountID());
 
             return response;
         }
