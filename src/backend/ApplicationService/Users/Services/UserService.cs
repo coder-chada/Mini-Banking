@@ -3,6 +3,7 @@ using ApplicationService.Common.Contracts;
 using ApplicationService.Common.Exceptions;
 using ApplicationService.Users.Contracts;
 using ApplicationService.Users.DTOs;
+using DomainLogic.Entities;
 
 namespace ApplicationService.Users.Services
 {
@@ -15,7 +16,8 @@ namespace ApplicationService.Users.Services
             this._unitOfWork = unitOfWork;
         }
 
-        public async Task<int> CreateUserAsync(CreateUserDTO createUserDTO, CancellationToken cancellationToken = default)
+        public async Task<CreateUserResponse> CreateUserAsync(CreateUserRequest createUserDTO,
+                                                              CancellationToken cancellationToken = default)
         {
             if (createUserDTO is null)
                 throw new ApplicationServiceException(ApplicationServiceErrorCode.MissingOrInvalidData,
@@ -26,13 +28,18 @@ namespace ApplicationService.Users.Services
                                 createUserDTO.Apellidos,
                                 createUserDTO.Email);
             
-            var newUserID = await _unitOfWork.UserRepository
+            var newUserID = await _unitOfWork
+                .UserRepository
                 .AddUserAsync(user, cancellationToken)
                 .ConfigureAwait(false);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _unitOfWork
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            return newUserID();
+            var response = new CreateUserResponse(newUserID());
+
+            return response;
         }
     }
 }

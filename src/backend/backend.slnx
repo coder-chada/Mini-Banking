@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/core/">
+    <Project Path="API/API.csproj" Id="3d0a9216-3e9e-4499-aa6b-0277ccc2e3c1" />
     <Project Path="ApplicationService/ApplicationService.csproj" />
     <Project Path="DomainLogic/DomainLogic.csproj" />
     <Project Path="Infrastructure/Infrastructure.csproj" Id="9b1627a8-ece6-455b-9c1a-fb3794785c28" />

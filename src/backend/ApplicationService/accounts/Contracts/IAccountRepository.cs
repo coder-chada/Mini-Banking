@@ -4,8 +4,8 @@ namespace ApplicationService.Accounts.Contracts
 {
     public interface IAccountRepository
     {
-        Task<int> AddAccountAsync(Account account,
-                                  CancellationToken cancellationToken = default);
+        Task<Func<int>> AddAccountAsync(Account account,
+                                        CancellationToken cancellationToken = default);
 
         Task<Account?> GetByAsync(int ID,
                                   CancellationToken cancellationToken = default);

@@ -1,3 +1,5 @@
+using DomainLogic.Entities;
+
 namespace ApplicationService.Users.Contracts
 {
     public interface IUserRepository

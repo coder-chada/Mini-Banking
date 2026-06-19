@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ApplicationService.Accounts.Contracts;
 using DomainLogic.Entities;
-using Mini_Banking.Domain.Enums;
+using Infrastructure.PersistenceModels;
+using Domain.Enums;
 
 namespace Infrastructure.Repositories
 {
@@ -14,16 +15,29 @@ namespace Infrastructure.Repositories
             this._myDBContext = myDBContext;
         }
 
-        public Task<int> AddAccountAsync(Account account,
-                                         CancellationToken cancellationToken = default)
+        public async Task<Func<int>> AddAccountAsync(Account account,
+                                                     CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var accountEntity = new AccountEntity(ID: account.Id,
+                                                  Numero: account.Numero,
+                                                  Tipo: (int)account.Tipo,
+                                                  Currency: (int)account.Currency,
+                                                  OwnerID: account.OwnerID,
+                                                  Balance: account.Balance);
+
+            await _myDBContext
+                .Accounts
+                .AddAsync(accountEntity, cancellationToken)
+                .ConfigureAwait(false);
+
+            return () => accountEntity.ID;
         }
 
         public async Task<Account?> GetByAsync(int id,
                                                CancellationToken cancellationToken = default)
         {
-            var accountEntity = await _myDBContext.Accounts
+            var accountEntity = await _myDBContext
+                .Accounts
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.ID == id, cancellationToken)
                 .ConfigureAwait(false);
@@ -44,7 +58,8 @@ namespace Infrastructure.Repositories
         public async Task UpdateBalanceAsync(Account account,
                                              CancellationToken cancellationToken = default)
         {
-            var rowsAffected = await _myDBContext.Accounts
+            var rowsAffected = await _myDBContext
+                .Accounts
                 .Where(a => a.ID == account.Id)
                 .ExecuteUpdateAsync(s => s.SetProperty(a => a.Balance, account.Balance), cancellationToken);
 

@@ -1,4 +1,4 @@
-﻿namespace Mini_Banking.Domain.Enums
+﻿namespace Domain.Enums
 {
     public enum TransactionType
     {

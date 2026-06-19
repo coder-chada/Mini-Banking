@@ -1,7 +1,7 @@
-﻿using DomainLogic.Entities;
+﻿using Domain.Enums;
+using DomainLogic.Entities;
 using DomainLogic.Exceptions;
 using DomainLogic.ValueObjects;
-using Mini_Banking.Domain.Enums;
 
 namespace DomainLogic.Test.Entities
 {

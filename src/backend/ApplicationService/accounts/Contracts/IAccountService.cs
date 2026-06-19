@@ -4,7 +4,7 @@ namespace ApplicationService.Accounts.Contracts
 {
     public interface IAccountService
     {
-        Task<CreateAccountDTOResponse> CreateAccountAsync(CreateAccountDTO accountDTO,
+        Task<CreateAccountDTOResponse> CreateAccountAsync(CreateAccountDTORequest accountDTO,
                                                           CancellationToken cancellation = default);
 
         Task<GetAccountByDTOResponse> GetAccountByAsync(int ID,

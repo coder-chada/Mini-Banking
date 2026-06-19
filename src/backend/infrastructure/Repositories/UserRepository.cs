@@ -1,5 +1,6 @@
 ﻿using Infrastructure.PersistenceModels;
 using ApplicationService.Users.Contracts;
+using DomainLogic.Entities;
 
 namespace Infrastructure.Repositories
 {
@@ -20,7 +21,7 @@ namespace Infrastructure.Repositories
             await _myDBContext.Users.AddAsync(userEntity,
                                               cancellationToken).ConfigureAwait(false);
 
-            return () => user.Id;
+            return () => userEntity.ID;
         }
 
         private static UserEntity MapToEntityPersistenceFrom(User user)
