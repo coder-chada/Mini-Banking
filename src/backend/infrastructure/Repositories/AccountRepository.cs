@@ -18,7 +18,7 @@ namespace Infrastructure.Repositories
         public async Task<Func<int>> AddAccountAsync(Account account,
                                                      CancellationToken cancellationToken = default)
         {
-            var accountEntity = new AccountEntity(ID: account.Id,
+            var accountEntity = new AccountEntity(ID: account.ID,
                                                   Numero: account.Numero,
                                                   Tipo: (int)account.Tipo,
                                                   Currency: (int)account.Currency,
@@ -60,7 +60,7 @@ namespace Infrastructure.Repositories
         {
             var rowsAffected = await _myDBContext
                 .Accounts
-                .Where(a => a.ID == account.Id)
+                .Where(a => a.ID == account.ID)
                 .ExecuteUpdateAsync(s => s.SetProperty(a => a.Balance, account.Balance), cancellationToken);
 
             if (rowsAffected == 0)

@@ -29,7 +29,7 @@ namespace Infrastructure.Repositories
             if (user is null) 
                 throw new System.ArgumentNullException(nameof(user));
 
-            return new UserEntity(user.Id,
+            return new UserEntity(user.ID,
                                   user.DNI,
                                   user.Nombres,
                                   user.Apellidos,
