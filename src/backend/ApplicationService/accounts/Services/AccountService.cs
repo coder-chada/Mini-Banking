@@ -59,7 +59,7 @@ namespace ApplicationService.Accounts.Services
 
             var response = new GetAccountByDTOResponse(DNI: user.DNI,
                                                        Correo: user.Email,
-                                                       AccountID: account.Id,
+                                                       AccountID: account.ID,
                                                        NumeroCuenta: account.Numero,
                                                        Balance: account.Balance);
 
