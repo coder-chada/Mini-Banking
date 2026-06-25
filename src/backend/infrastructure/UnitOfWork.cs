@@ -1,4 +1,5 @@
-﻿using ApplicationService.Accounts.Contracts;
+using ApplicationService.Accounts.Contracts;
+using ApplicationService.BankTransactions.Contracts;
 using ApplicationService.Common.Contracts;
 using ApplicationService.Users.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,10 @@ namespace Infrastructure
             get => _accountRepository;
         }
 
+        public IBankTransactionRepository BankTransactionRepository => throw new NotImplementedException();
+
+        public IIdempotencyRepository IdempotencyRepository => throw new NotImplementedException();
+
         public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
             await _myDBContext
@@ -56,6 +61,11 @@ namespace Infrastructure
                 .ConfigureAwait(false);
         }
 
+        public Task PublishDomainEventsAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
         {
             await _myDBContext
@@ -76,7 +86,7 @@ namespace Infrastructure
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                throw new DbUpdateConcurrencyException ("The record was modified by another user. Please refresh and try again.", ex);
+                throw new DbUpdateConcurrencyException("The record was modified by another user. Please refresh and try again.", ex);
             }
             catch (Exception)
             {
