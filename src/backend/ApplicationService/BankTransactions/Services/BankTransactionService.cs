@@ -11,11 +11,17 @@ namespace ApplicationService.BankTransactions.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IIdempotencyExecutor _idempotencyExecutor;
+        private readonly IDomainEventCollector _eventCollector;
 
-        public BankTransactionService(IUnitOfWork unitOfWork, IIdempotencyExecutor idempotencyExecutor)
+        public BankTransactionService(
+            IUnitOfWork unitOfWork,
+            IIdempotencyExecutor idempotencyExecutor,
+            IDomainEventCollector eventCollector
+        )
         {
             this._unitOfWork = unitOfWork;
             this._idempotencyExecutor = idempotencyExecutor;
+            this._eventCollector = eventCollector;
         }
 
         public async Task<CreateDepositResponse> MakeDepositAsync(
@@ -54,12 +60,18 @@ namespace ApplicationService.BankTransactions.Services
 
             deposit.Execute();
 
+            _eventCollector.AddEvents(deposit.GetEvents());
+            deposit.ClearEvents();
+
             var newTransactionID = await _unitOfWork
                 .BankTransactionRepository.AddAsync(transaction: deposit, cancellationToken: token)
                 .ConfigureAwait(false);
 
             await _unitOfWork
-                .AccountRepository.UpdateBalanceAsync(account: accountReceiver, cancellationToken: token)
+                .AccountRepository.UpdateBalanceAsync(
+                    account: accountReceiver,
+                    cancellationToken: token
+                )
                 .ConfigureAwait(false);
 
             await _unitOfWork
@@ -74,7 +86,10 @@ namespace ApplicationService.BankTransactions.Services
             return response;
         }
 
-        private async Task<Account> GetAccountByAsync(int accountID, CancellationToken cancellationToken)
+        private async Task<Account> GetAccountByAsync(
+            int accountID,
+            CancellationToken cancellationToken
+        )
         {
             var account = await _unitOfWork
                 .AccountRepository.GetByAsync(ID: accountID, cancellationToken: cancellationToken)

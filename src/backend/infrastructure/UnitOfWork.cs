@@ -2,6 +2,7 @@ using ApplicationService.Accounts.Contracts;
 using ApplicationService.BankTransactions.Contracts;
 using ApplicationService.Common.Contracts;
 using ApplicationService.Users.Contracts;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure
@@ -11,14 +12,26 @@ namespace Infrastructure
         private readonly MyDBContext _myDBContext;
         private IUserRepository _userRepository;
         private IAccountRepository _accountRepository;
+        private IBankTransactionRepository _bankTransactionRepository;
+        private IIdempotencyRepository _idempotencyRepository;
+        private readonly IDomainEventCollector _eventCollector;
+        private readonly IMediator _mediator;
 
         public UnitOfWork(MyDBContext myDBContext,
                           IUserRepository userRepository,
-                          IAccountRepository accountRepository)
+                          IAccountRepository accountRepository,
+                          IBankTransactionRepository bankTransactionRepository,
+                          IIdempotencyRepository idempotencyRepository,
+                          IDomainEventCollector eventCollector,
+                          IMediator mediator)
         {
             this._myDBContext = myDBContext;
             this._userRepository = userRepository;
             this._accountRepository = accountRepository;
+            this._bankTransactionRepository = bankTransactionRepository;
+            this._idempotencyRepository = idempotencyRepository;
+            this._eventCollector = eventCollector;
+            this._mediator = mediator;
         }
 
         public IUserRepository UserRepository
@@ -31,9 +44,15 @@ namespace Infrastructure
             get => _accountRepository;
         }
 
-        public IBankTransactionRepository BankTransactionRepository => throw new NotImplementedException();
+        public IBankTransactionRepository BankTransactionRepository
+        {
+            get => _bankTransactionRepository;
+        }
 
-        public IIdempotencyRepository IdempotencyRepository => throw new NotImplementedException();
+        public IIdempotencyRepository IdempotencyRepository
+        {
+            get => _idempotencyRepository;
+        }
 
         public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
@@ -61,9 +80,18 @@ namespace Infrastructure
                 .ConfigureAwait(false);
         }
 
-        public Task PublishDomainEventsAsync(CancellationToken cancellationToken = default)
+        public async Task PublishDomainEventsAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var domainEvents = _eventCollector.GetAll();
+
+            foreach (var domainEvet in domainEvents)
+            {
+                await _mediator
+                    .Publish(domainEvet, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            _eventCollector.Clear();
         }
 
         public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
