@@ -1,4 +1,5 @@
 ﻿using ApplicationService.Accounts.Contracts;
+using ApplicationService.BankTransactions.Contracts;
 using ApplicationService.Common.Contracts;
 using ApplicationService.Users.Contracts;
 using Infrastructure.Repositories;
@@ -23,6 +24,8 @@ namespace Infrastructure.Extensions
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
+            services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
             return services;
         }

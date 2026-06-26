@@ -1,17 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure.Mappers;
 using Infrastructure.PersistenceModels;
-using Infrastructure.Mappers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure
 {
-    internal class MyDBContext : DbContext
+    public class MyDBContext : DbContext
     {
         public DbSet<UserEntity> Users => Set<UserEntity>();
         public DbSet<AccountEntity> Accounts => Set<AccountEntity>();
+        public DbSet<BankTransactionEntity> BankTransactions => Set<BankTransactionEntity>();
+        public DbSet<IdempotencyEntity> Idempotency => Set<IdempotencyEntity>();
+
 
         public MyDBContext(DbContextOptions<MyDBContext> opt) : base(opt)
         {
-            
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
