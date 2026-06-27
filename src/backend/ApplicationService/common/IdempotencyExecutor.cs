@@ -1,8 +1,8 @@
-using System.Text.Json;
 using ApplicationService.Common.Contracts;
 using ApplicationService.Common.Exceptions;
 using Domain.Enums;
 using DomainLogic.Entities;
+using System.Text.Json;
 
 namespace ApplicationService.Common
 {
@@ -24,7 +24,11 @@ namespace ApplicationService.Common
         {
             ValidateKeyRequestHash(key, requestHash);
 
-            Idempotency? idempotency = await GetIdempotencyBy(key: key, cancellationToken: cancellationToken).ConfigureAwait(false);
+            Idempotency? idempotency = await GetIdempotencyBy(
+                    key: key,
+                    cancellationToken: cancellationToken
+                )
+                .ConfigureAwait(false);
 
             if (idempotency is not null)
             {
@@ -49,7 +53,8 @@ namespace ApplicationService.Common
                 await _unitOfWork.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
                 // Claim idempotency for this request
-                idempotencyClaimed = await ClaimIdempotencyAsync(idempotency, cancellationToken).ConfigureAwait(false);
+                idempotencyClaimed = await ClaimIdempotencyAsync(idempotency, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Execute business logic and persist changes
                 var response = await businessLogicFunction(cancellationToken).ConfigureAwait(false);
@@ -63,9 +68,7 @@ namespace ApplicationService.Common
 
                 await _unitOfWork.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
 
-                await _unitOfWork
-                    .PublishDomainEventsAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                await _unitOfWork.PublishDomainEventsAsync(cancellationToken).ConfigureAwait(false);
 
                 return response;
             }
@@ -74,7 +77,11 @@ namespace ApplicationService.Common
                 await _unitOfWork.RollbackTransactionAsync(cancellationToken).ConfigureAwait(false);
 
                 // Mark idempotency as failed only if it was claimed earlier
-                await MarkIdempotencyFailedIfClaimedAsync(key, idempotencyClaimed, cancellationToken)
+                await MarkIdempotencyFailedIfClaimedAsync(
+                        key,
+                        idempotencyClaimed,
+                        cancellationToken
+                    )
                     .ConfigureAwait(false);
 
                 throw;
@@ -90,9 +97,14 @@ namespace ApplicationService.Common
                 );
         }
 
-        private async Task<Idempotency?> GetIdempotencyBy(string key, CancellationToken cancellationToken)
+        private async Task<Idempotency?> GetIdempotencyBy(
+            string key,
+            CancellationToken cancellationToken
+        )
         {
-            return await _unitOfWork.IdempotencyRepository.GetByAsync(key, cancellationToken).ConfigureAwait(false);
+            return await _unitOfWork
+                .IdempotencyRepository.GetByAsync(key, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private static void ValidateIdempotency(string requestHash, Idempotency idempotency)
@@ -116,7 +128,10 @@ namespace ApplicationService.Common
                 );
         }
 
-        private async Task<bool> ClaimIdempotencyAsync(Idempotency idempotency, CancellationToken cancellationToken)
+        private async Task<bool> ClaimIdempotencyAsync(
+            Idempotency idempotency,
+            CancellationToken cancellationToken
+        )
         {
             await _unitOfWork
                 .IdempotencyRepository.CreateInProgressAsync(
@@ -157,7 +172,9 @@ namespace ApplicationService.Common
 
             try
             {
-                await _unitOfWork.IdempotencyRepository.MarkAsFailedAsync(key, cancellationToken).ConfigureAwait(false);
+                await _unitOfWork
+                    .IdempotencyRepository.MarkAsFailedAsync(key, cancellationToken)
+                    .ConfigureAwait(false);
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
