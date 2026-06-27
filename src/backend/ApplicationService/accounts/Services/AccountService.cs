@@ -1,8 +1,8 @@
 ﻿using ApplicationService.Accounts.Contracts;
-using ApplicationService.Common.Contracts;
 using ApplicationService.Accounts.DTOs;
-using DomainLogic.Entities;
+using ApplicationService.Common.Contracts;
 using ApplicationService.Common.Exceptions;
+using DomainLogic.Entities;
 
 namespace ApplicationService.Accounts.Services
 {
@@ -15,53 +15,64 @@ namespace ApplicationService.Accounts.Services
             this._unitOfWork = unitOfWork;
         }
 
-        public async Task<CreateAccountDTOResponse> CreateAccountAsync(CreateAccountDTORequest accountDTO,
-                                                                       CancellationToken cancellationToken = default)
+        public async Task<CreateAccountDTOResponse> CreateAccountAsync(
+            CreateAccountDTORequest accountDTO,
+            CancellationToken cancellationToken = default
+        )
         {
-            var account = new Account(numero: accountDTO.Numero,
-                                      tipo: accountDTO.Tipo,
-                                      currency: accountDTO.Currency,
-                                      ownerID: accountDTO.OwnerID,
-                                      balance: 0);
-                
+            var account = new Account(
+                numero: accountDTO.Numero,
+                tipo: accountDTO.Tipo,
+                currency: accountDTO.Currency,
+                ownerID: accountDTO.OwnerID,
+                balance: 0
+            );
+
             var newAccountID = await _unitOfWork
-                .AccountRepository
-                .AddAccountAsync(account, cancellationToken)
+                .AccountRepository.AddAccountAsync(account, cancellationToken)
                 .ConfigureAwait(false);
 
-            await _unitOfWork
-                .SaveChangesAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
             var response = new CreateAccountDTOResponse(newAccountID());
 
             return response;
         }
 
-        public async Task<GetAccountByDTOResponse> GetAccountByAsync(int id,
-                                                                     CancellationToken cancellationToken = default)
+        public async Task<GetAccountByDTOResponse> GetAccountByAsync(
+            int id,
+            CancellationToken cancellationToken = default
+        )
         {
-            var account = await _unitOfWork.AccountRepository
-                .GetByAsync(id, cancellationToken)
+            var account = await _unitOfWork
+                .AccountRepository.GetByAsync(id, cancellationToken)
                 .ConfigureAwait(false);
 
             if (account is null)
-                throw new ApplicationServiceException(ApplicationServiceErrorCode.MissingOrInvalidData,
-                                                      "Account can not be null");
+                throw new ApplicationServiceException(
+                    ApplicationServiceErrorCode.MissingOrInvalidData,
+                    "Account can not be null"
+                );
 
-            var user = await _unitOfWork.UserRepository
-                .GetUserBy(id, cancellationToken)
+            var user = await _unitOfWork
+                .UserRepository.GetUserBy(account.OwnerID, cancellationToken)
                 .ConfigureAwait(false);
 
             if (user is null)
-                throw new ApplicationServiceException(ApplicationServiceErrorCode.MissingOrInvalidData,
-                                                      "User can not be null");
+                throw new ApplicationServiceException(
+                    ApplicationServiceErrorCode.MissingOrInvalidData,
+                    "User can not be null"
+                );
 
-            var response = new GetAccountByDTOResponse(DNI: user.DNI,
-                                                       Correo: user.Email,
-                                                       AccountID: account.ID,
-                                                       NumeroCuenta: account.Numero,
-                                                       Balance: account.Balance);
+            var response = new GetAccountByDTOResponse(
+                DNI: user.DNI,
+                Correo: user.Email,
+                AccountID: account.ID,
+                NumeroCuenta: account.Numero,
+                TipoCuenta: account.Tipo.ToString(),
+                Moneda: account.Currency.ToString(),
+                Balance: account.Balance
+            );
 
             return response;
         }
