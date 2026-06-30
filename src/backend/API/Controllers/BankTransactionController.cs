@@ -35,5 +35,24 @@ namespace API.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("withdrawal")]
+        public async Task<IActionResult> Withdrawal(
+            [FromBody] CreateWithdrawalRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var key = HttpContext.Items["IdempotencyKey"]?.ToString();
+            var requestHash = HttpContext.Items["RequestHash"]?.ToString();
+
+            var result = await _bankTransaction.MakeWithdrawalAsync(
+                idempotencyKey: key ?? string.Empty,
+                requestHash: requestHash ?? string.Empty,
+                withdrawalDTO: request,
+                cancellationToken: cancellationToken
+            );
+
+            return Ok(result);
+        }
     }
 }
