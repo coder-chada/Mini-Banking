@@ -4,6 +4,6 @@ namespace DomainLogic.Contracts
 {
     public interface IDomainEvent : INotification
     {
-        DateTimeOffset OcurredOn { get; }
+        DateTimeOffset OccurredOn { get; }
     }
 }

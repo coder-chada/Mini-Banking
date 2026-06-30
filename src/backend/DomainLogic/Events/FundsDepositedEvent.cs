@@ -7,7 +7,7 @@ namespace DomainLogic.Events
         public int TransactionID { get; init; }
         public int ReceiverID { get; init; }
 
-        public DateTimeOffset OcurredOn => DateTimeOffset.Now;
+        public DateTimeOffset OccurredOn => DateTimeOffset.Now;
 
         public FundsDepositedEvent(int transactionID, int receiverID)
         {
