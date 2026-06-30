@@ -41,6 +41,13 @@ namespace DomainLogic.Entities
                 TransactionType.Deposit,
                 BankTransactionStatus.Pending);
 
+        public static BankTransaction FromWithdrawal(Account sender, Amount amount) =>
+            new(sender,
+                 null,
+                 amount,
+                 TransactionType.Withdrawal,
+                 BankTransactionStatus.Pending);
+
         private void MarkSuccessTransaction() =>
             this.Status = BankTransactionStatus.Success;
 
@@ -52,7 +59,10 @@ namespace DomainLogic.Entities
                 {
                     case TransactionType.Deposit:
                         ExecuteDeposit();
-                        break;                    
+                        break;
+                    case TransactionType.Withdrawal:
+                        ExecuteWithdrawal();
+                        break;
                     default:
                         break;
                 }
@@ -79,6 +89,17 @@ namespace DomainLogic.Entities
 
             var fundDepositEvent = new FundsDepositedEvent(this.ID, this.ReceiverID!.Value);
             RaiseEvent(fundDepositEvent);
+        }
+
+        private void ExecuteWithdrawal()
+        {
+            if (SenderAccount is null)
+                throw new DomainLogicException(DomainLogicErrorCode.AccountIsNull, "the sender can not be null");
+
+            SenderAccount.Debit(Amount);
+
+            var fundsWithdrawnEvent = new FundsWithdrawnEvent(0, SenderAccount.OwnerID);
+            RaiseEvent(fundsWithdrawnEvent);
         }
 
         private void MarkFailedTransaction() =>

@@ -7,7 +7,7 @@ namespace DomainLogic.UnitTests.Entities
     public class BankTransactionTest
     {
         [Fact]
-        public void Execute_WhenDepositIsSuccessful_AnFundsDepositedEventMustExist()
+        public void Execute_WhenDepositIsSuccessful_AFundsDepositedEventMustExist()
         {
             // arrange
             var account = CreateAccount();
@@ -51,11 +51,11 @@ namespace DomainLogic.UnitTests.Entities
             bankTransaction.Execute();
 
             // assert
-            Assert.Equal(expectedStatus, bankTransaction.Status); 
+            Assert.Equal(expectedStatus, bankTransaction.Status);
         }
 
         [Fact]
-        public void Execute_WhenDepositFails_AnFundsDepositedEventMustNotExist()
+        public void Execute_WhenDepositFails_AFundsDepositedEventMustNotExist()
         {
             // arrange
             var amount = new Amount(50);
@@ -66,6 +66,38 @@ namespace DomainLogic.UnitTests.Entities
 
             // assert
             Assert.Empty(bankTransaction.GetEvents());
+        }
+
+        [Fact]
+        public void Execute_WhenWithdrawnIsSuccessful_ShouldDebitAccount()
+        {
+            // arrange
+            var balance = 100m;
+            var account = CreateAccount(balance);
+            var amount = new Amount(50);
+            var bankTransaction = BankTransaction.FromWithdrawal(account, amount);
+            var expectedBalance = balance - amount.Value;
+
+            // act
+            bankTransaction.Execute();
+
+            // assert
+            Assert.Equal(expectedBalance, account.Balance);
+        }
+
+        [Fact]
+        public void Execute_WhenWithdrawnIsSuccessful_AFundsWithdrawnEventMustExist()
+        {
+            // arrange
+            var account = CreateAccount();
+            var amount = new Amount(50);
+            var bankTransaction = BankTransaction.FromWithdrawal(account, amount);
+
+            // act
+            bankTransaction.Execute();
+
+            // assert
+            Assert.NotEmpty(bankTransaction.GetEvents());
         }
 
         private static Account CreateAccount(decimal balance = 100m)

@@ -86,6 +86,57 @@ namespace ApplicationService.BankTransactions.Services
             return response;
         }
 
+        public async Task<CreateWithdrawalResponse> MakeWithdrawalAsync(
+            string idempotencyKey,
+            string requestHash,
+            CreateWithdrawalRequest withdrawalDTO,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var result = await _idempotencyExecutor
+                .ExecuteAsync(
+                    idempotencyKey,
+                    requestHash,
+                    businessLogicFunction => DoWithdrawalAsync(withdrawalDTO, cancellationToken),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            return result;
+        }
+
+        private async Task<CreateWithdrawalResponse> DoWithdrawalAsync(
+            CreateWithdrawalRequest withdrawalDTO,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var account = await GetAccountByAsync(withdrawalDTO.SenderAccountID, cancellationToken)
+                .ConfigureAwait(false);
+
+            var bankTransaction = BankTransaction.FromWithdrawal(
+                account,
+                new Amount(withdrawalDTO.Amount)
+            );
+            bankTransaction.Execute();
+
+            _eventCollector.AddEvents(bankTransaction.GetEvents());
+            bankTransaction.ClearEvents();
+
+            var newTransactionID = await _unitOfWork
+                .BankTransactionRepository.AddAsync(bankTransaction, cancellationToken)
+                .ConfigureAwait(false);
+
+            await _unitOfWork
+                .AccountRepository.UpdateBalanceAsync(account, cancellationToken)
+                .ConfigureAwait(false);
+
+            await _unitOfWork
+                .BankTransactionRepository.MarkAsCompletedAsync(newTransactionID)
+                .ConfigureAwait(false);
+
+            return new CreateWithdrawalResponse(newTransactionID);
+        }
+
         private async Task<Account> GetAccountByAsync(
             int accountID,
             CancellationToken cancellationToken
