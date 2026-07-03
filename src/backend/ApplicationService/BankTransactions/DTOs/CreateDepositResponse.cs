@@ -1,6 +1,6 @@
 ﻿namespace ApplicationService.BankTransactions.DTOs
 {
-    public record CreateDepositResponse(Guid ID)
+    public sealed record CreateDepositResponse(Guid ID)
     {
     }
 }

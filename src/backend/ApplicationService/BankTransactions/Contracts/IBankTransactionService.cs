@@ -17,5 +17,12 @@ namespace ApplicationService.BankTransactions.Contracts
             CreateWithdrawalRequest withdrawalDTO,
             CancellationToken cancellationToken = default
         );
+
+        Task<CreateTransferResponse> MakeTransferAsync(
+            string idempotencyKey,
+            string requestHash,
+            CreateTransferRequest transferDTO,
+            CancellationToken cancellationToken = default
+        );
     }
 }
