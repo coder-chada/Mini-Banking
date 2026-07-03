@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using DomainLogic.Entities;
+using DomainLogic.Events;
 using DomainLogic.ValueObjects;
 
 namespace DomainLogic.UnitTests.Entities
@@ -18,7 +19,10 @@ namespace DomainLogic.UnitTests.Entities
             bankTransaction.Execute();
 
             // assert
-            Assert.NotEmpty(bankTransaction.GetEvents());
+            var events = bankTransaction.GetEvents();
+            var domainEvent = Assert.Single(events);
+
+            Assert.IsType<FundsDepositedEvent>(domainEvent);
         }
 
         [Fact]
@@ -97,7 +101,48 @@ namespace DomainLogic.UnitTests.Entities
             bankTransaction.Execute();
 
             // assert
-            Assert.NotEmpty(bankTransaction.GetEvents());
+            var events = bankTransaction.GetEvents();
+            var domainEvent = Assert.Single(events);
+
+            Assert.IsType<FundsWithdrawnEvent>(domainEvent);
+        }
+
+        [Fact]
+        public void Execute_WhenTransferIsSuccessful_ShouldDebitSenderAccountCreditReceiverAccount()
+        {
+            // arrange
+            var sender = CreateAccount();
+            var receiver = CreateAccount();
+            var amount = new Amount(50);
+            var bankTransaction = BankTransaction.FromTransfer(sender, receiver, amount);
+            var expectedSenderBalance = sender.Balance - amount.Value;
+            var expectedReceiverBalance = receiver.Balance + amount.Value;
+
+            // act
+            bankTransaction.Execute();
+
+            // assert
+            Assert.Equal(expectedSenderBalance, sender.Balance);
+            Assert.Equal(expectedReceiverBalance, receiver.Balance);
+        }
+
+        [Fact]
+        public void Execute_WhenTransferIsSuccessful_AFundsTransferredEventMustExist()
+        {
+            // arrange
+            var sender = CreateAccount();
+            var receiver = CreateAccount();
+            var amount = new Amount(50);
+            var bankTransaction = BankTransaction.FromTransfer(sender, receiver, amount);
+
+            // act
+            bankTransaction.Execute();
+
+            // assert
+            var events = bankTransaction.GetEvents();
+            var domainEvent = Assert.Single(events);
+
+            Assert.IsType<FundsTransferredEvent>(domainEvent);
         }
 
         private static Account CreateAccount(decimal balance = 100m)

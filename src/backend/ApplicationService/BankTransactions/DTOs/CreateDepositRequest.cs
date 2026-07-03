@@ -1,6 +1,6 @@
 ﻿namespace ApplicationService.BankTransactions.DTOs
 {
-    public record CreateDepositRequest(int ReceiverAccountID, decimal Amount)
+    public sealed record CreateDepositRequest(int ReceiverAccountID, decimal Amount)
     {
     }
 }

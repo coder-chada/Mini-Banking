@@ -154,5 +154,57 @@ namespace ApplicationService.BankTransactions.Services
 
             return account;
         }
+
+        public async Task<CreateTransferResponse> MakeTransferAsync(string idempotencyKey, string requestHash, CreateTransferRequest transferDTO, CancellationToken cancellationToken = default)
+        {
+            var result = await _idempotencyExecutor
+                .ExecuteAsync(
+                    idempotencyKey,
+                    requestHash,
+                    businessLogicFunction => DoTransferAsync(transferDTO, cancellationToken),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            return result;
+        }
+
+        private async Task<CreateTransferResponse> DoTransferAsync(CreateTransferRequest transferDTO, CancellationToken cancellationToken)
+        {
+            var senderAccount = await GetAccountByAsync(transferDTO.SenderAccountID, cancellationToken)
+                .ConfigureAwait(false);
+
+            var receiverAccount = await GetAccountByAsync(transferDTO.ReceiverAccountID, cancellationToken)
+                .ConfigureAwait(false);
+
+            var bankTransaction = BankTransaction.FromTransfer(
+                sender: senderAccount,
+                receiver: receiverAccount,
+                amount: new Amount(transferDTO.Amount)
+            );
+
+            bankTransaction.Execute();
+
+            _eventCollector.AddEvents(bankTransaction.GetEvents());
+            bankTransaction.ClearEvents();
+
+            var newTransactionID = await _unitOfWork
+                .BankTransactionRepository.AddAsync(bankTransaction, cancellationToken)
+                .ConfigureAwait(false);
+
+            await _unitOfWork
+                .AccountRepository.UpdateBalanceAsync(senderAccount, cancellationToken)
+                .ConfigureAwait(false);
+
+            await _unitOfWork
+                .AccountRepository.UpdateBalanceAsync(receiverAccount, cancellationToken)
+                .ConfigureAwait(false);
+
+            await _unitOfWork
+                .BankTransactionRepository.MarkAsCompletedAsync(newTransactionID)
+                .ConfigureAwait(false);
+
+            return new CreateTransferResponse(newTransactionID);
+        }
     }
 }

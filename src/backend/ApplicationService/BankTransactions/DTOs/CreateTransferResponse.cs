@@ -1,6 +1,6 @@
 ﻿namespace ApplicationService.BankTransactions.DTOs
 {
-    public sealed record CreateWithdrawalResponse(Guid TransactionId)
+    public sealed record CreateTransferResponse(Guid TransactionId)
     {
     }
 }
