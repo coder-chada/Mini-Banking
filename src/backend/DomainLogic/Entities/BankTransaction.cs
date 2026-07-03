@@ -17,11 +17,13 @@ namespace DomainLogic.Entities
         public TransactionType Type { get; private set; }
         public BankTransactionStatus Status { get; private set; }
 
-        private BankTransaction(Account? senderAccount,
-                                Account? receiverAccount,
-                                Amount amount,
-                                TransactionType type,
-                                BankTransactionStatus status)
+        private BankTransaction(
+            Account? senderAccount,
+            Account? receiverAccount,
+            Amount amount,
+            TransactionType type,
+            BankTransactionStatus status
+        )
         {
             this.SenderID = senderAccount is null ? null : senderAccount.ID;
             this.SenderAccount = senderAccount;
@@ -33,23 +35,19 @@ namespace DomainLogic.Entities
             this.Status = status;
         }
 
-        public static BankTransaction FromDeposit(Account receiver,
-                                                  Amount amount) =>
-            new(null,
-                receiver,
-                amount,
-                TransactionType.Deposit,
-                BankTransactionStatus.Pending);
+        public static BankTransaction FromDeposit(Account receiver, Amount amount) =>
+            new(null, receiver, amount, TransactionType.Deposit, BankTransactionStatus.Pending);
 
         public static BankTransaction FromWithdrawal(Account sender, Amount amount) =>
-            new(sender,
-                 null,
-                 amount,
-                 TransactionType.Withdrawal,
-                 BankTransactionStatus.Pending);
+            new(sender, null, amount, TransactionType.Withdrawal, BankTransactionStatus.Pending);
 
-        private void MarkSuccessTransaction() =>
-            this.Status = BankTransactionStatus.Success;
+        public static BankTransaction FromTransfer(
+            Account sender,
+            Account receiver,
+            Amount amount
+        ) => new(sender, receiver, amount, TransactionType.Transfer, BankTransactionStatus.Pending);
+
+        private void MarkSuccessTransaction() => this.Status = BankTransactionStatus.Success;
 
         public void Execute()
         {
@@ -62,6 +60,9 @@ namespace DomainLogic.Entities
                         break;
                     case TransactionType.Withdrawal:
                         ExecuteWithdrawal();
+                        break;
+                    case TransactionType.Transfer:
+                        ExecuteTransfer();
                         break;
                     default:
                         break;
@@ -83,26 +84,58 @@ namespace DomainLogic.Entities
         private void ExecuteDeposit()
         {
             if (ReceiverAccount is null)
-                throw new DomainLogicException(DomainLogicErrorCode.AccountIsNull, "the receiver can not be null");
+                throw new DomainLogicException(
+                    errorCode: DomainLogicErrorCode.AccountIsNull,
+                    message: "the receiver can not be null"
+                );
 
             ReceiverAccount.Credit(Amount);
 
-            var fundDepositEvent = new FundsDepositedEvent(this.ID, this.ReceiverID!.Value);
+            var fundDepositEvent = new FundsDepositedEvent(
+                transactionID: ID,
+                receiverID: ReceiverAccount.ID
+            );
+
             RaiseEvent(fundDepositEvent);
         }
 
         private void ExecuteWithdrawal()
         {
             if (SenderAccount is null)
-                throw new DomainLogicException(DomainLogicErrorCode.AccountIsNull, "the sender can not be null");
+                throw new DomainLogicException(
+                    errorCode: DomainLogicErrorCode.AccountIsNull,
+                    message: "the sender can not be null"
+                );
 
             SenderAccount.Debit(Amount);
 
-            var fundsWithdrawnEvent = new FundsWithdrawnEvent(0, SenderAccount.OwnerID);
+            var fundsWithdrawnEvent = new FundsWithdrawnEvent(
+                transactionID: 0,
+                senderID: SenderAccount.OwnerID
+            );
+
             RaiseEvent(fundsWithdrawnEvent);
         }
 
-        private void MarkFailedTransaction() =>
-            this.Status = BankTransactionStatus.Failed;
+        private void ExecuteTransfer()
+        {
+            if (SenderAccount is null || ReceiverAccount is null)
+                throw new DomainLogicException(
+                    errorCode: DomainLogicErrorCode.AccountIsNull,
+                    message: "the sender and receiver can not be null"
+                );
+
+            SenderAccount.Debit(Amount);
+            ReceiverAccount.Credit(Amount);
+
+            var fundsTransferredEvent = new FundsTransferredEvent(
+                transactionID: 0,
+                senderID: SenderAccount.ID,
+                receiverID: ReceiverAccount.ID
+            );
+            RaiseEvent(fundsTransferredEvent);
+        }
+
+        private void MarkFailedTransaction() => this.Status = BankTransactionStatus.Failed;
     }
 }
