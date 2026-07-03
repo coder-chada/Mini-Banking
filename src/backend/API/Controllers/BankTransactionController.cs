@@ -54,5 +54,24 @@ namespace API.Controllers
 
             return Ok(result);
         }
+
+        [HttpPatch("transfer")]
+        public async Task<IActionResult> Transfer(
+            [FromBody] CreateTransferRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var key = HttpContext.Items["IdempotencyKey"]?.ToString();
+            var requestHash = HttpContext.Items["RequestHash"]?.ToString();
+
+            var result = await _bankTransaction.MakeTransferAsync(
+                idempotencyKey: key ?? string.Empty,
+                requestHash: requestHash ?? string.Empty,
+                transferDTO: request,
+                cancellationToken: cancellationToken
+            );
+
+            return Ok(result);
+        }
     }
 }
