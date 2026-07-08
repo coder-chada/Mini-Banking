@@ -13,7 +13,7 @@ namespace Infrastructure.Repositories
             this._myDBContext = myDBContext;
         }
 
-        public async Task<Func<int>> AddUserAsync(
+        public async Task<Func<int>> AddAsync(
             User user,
             CancellationToken cancellationToken = default
         )
@@ -36,7 +36,7 @@ namespace Infrastructure.Repositories
             return new UserEntity(user.ID, user.DNI, user.Nombres, user.Apellidos, user.Email);
         }
 
-        public async Task<User> GetUserBy(int id, CancellationToken cancellationToken = default)
+        public async Task<User> GetBy(int id, CancellationToken cancellationToken = default)
         {
             var userEntity = await _myDBContext
                 .Users

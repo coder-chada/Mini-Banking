@@ -8,11 +8,11 @@ namespace API.Controllers
     [ApiController]
     [ApiVersion(1)]
     [Route("api/v{v:apiversion}/[controller]")]
-    public class BankTransactionController : ControllerBase
+    public class BankTransactionsController : ControllerBase
     {
         private readonly IBankTransactionService _bankTransaction;
 
-        public BankTransactionController(IBankTransactionService bankTransaction)
+        public BankTransactionsController(IBankTransactionService bankTransaction)
         {
             this._bankTransaction = bankTransaction;
         }

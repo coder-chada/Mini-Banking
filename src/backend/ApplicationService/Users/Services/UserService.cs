@@ -30,7 +30,7 @@ namespace ApplicationService.Users.Services
             
             var newUserID = await _unitOfWork
                 .UserRepository
-                .AddUserAsync(user, cancellationToken)
+                .AddAsync(user, cancellationToken)
                 .ConfigureAwait(false);
 
             await _unitOfWork
