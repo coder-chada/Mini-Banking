@@ -8,11 +8,11 @@ namespace API.Controllers
     [ApiController]
     [ApiVersion(1)]
     [Route("api/v{v:apiversion}/[Controller]")]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
 
-        public UserController(IUserService userService)
+        public UsersController(IUserService userService)
         {
             this._userService = userService;
         }

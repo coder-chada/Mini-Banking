@@ -143,7 +143,7 @@ namespace ApplicationService.BankTransactions.Services
         )
         {
             var account = await _unitOfWork
-                .AccountRepository.GetByAsync(ID: accountID, cancellationToken: cancellationToken)
+                .AccountRepository.GetByAsync(accountID: accountID, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
             if (account is null)

@@ -3,6 +3,7 @@ using ApplicationService.Accounts.DTOs;
 using ApplicationService.Common.Contracts;
 using ApplicationService.Common.Exceptions;
 using DomainLogic.Entities;
+using DomainLogic.ValueObjects;
 
 namespace ApplicationService.Accounts.Services
 {
@@ -15,8 +16,8 @@ namespace ApplicationService.Accounts.Services
             this._unitOfWork = unitOfWork;
         }
 
-        public async Task<CreateAccountDTOResponse> CreateAccountAsync(
-            CreateAccountDTORequest accountDTO,
+        public async Task<CreateAccountResponse> CreateAccountAsync(
+            CreateAccountRequest accountDTO,
             CancellationToken cancellationToken = default
         )
         {
@@ -34,28 +35,31 @@ namespace ApplicationService.Accounts.Services
 
             await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            var response = new CreateAccountDTOResponse(newAccountID());
+            var response = new CreateAccountResponse(newAccountID());
 
             return response;
         }
 
-        public async Task<GetAccountByDTOResponse> GetAccountByAsync(
-            int id,
+        public async Task<GetAccountByIDResponse> GetAccountByAsync(
+            int accountID,
             CancellationToken cancellationToken = default
         )
         {
             var account = await _unitOfWork
-                .AccountRepository.GetByAsync(id, cancellationToken)
+                .AccountRepository.GetByAsync(
+                    accountID: accountID,
+                    cancellationToken: cancellationToken
+                )
                 .ConfigureAwait(false);
 
             if (account is null)
                 throw new ApplicationServiceException(
                     ApplicationServiceErrorCode.MissingOrInvalidData,
-                    "Account can not be null"
+                    "Account does not exists"
                 );
 
             var user = await _unitOfWork
-                .UserRepository.GetUserBy(account.OwnerID, cancellationToken)
+                .UserRepository.GetBy(userID: account.OwnerID, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
             if (user is null)
@@ -64,7 +68,7 @@ namespace ApplicationService.Accounts.Services
                     "User can not be null"
                 );
 
-            var response = new GetAccountByDTOResponse(
+            var response = new GetAccountByIDResponse(
                 DNI: user.DNI,
                 Correo: user.Email,
                 AccountID: account.ID,
@@ -75,6 +79,48 @@ namespace ApplicationService.Accounts.Services
             );
 
             return response;
+        }
+
+        public async Task<List<GetAccountsByUserIDResponse>> GetAccountsByAsync(
+            UserID userID,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var accounts = await _unitOfWork
+                .AccountRepository.GetByAsync(userID: userID, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!accounts.Any())
+                throw new ApplicationServiceException(
+                    ApplicationServiceErrorCode.DataNotFound,
+                    $"does not exist accounts for the User-ID {userID.Value}"
+                );
+
+            var ownerID = accounts.First().OwnerID;
+
+            var ownerAccount = await _unitOfWork
+                .UserRepository.GetBy(userID: ownerID, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            if (ownerAccount is null)
+                throw new ApplicationServiceException(
+                    ApplicationServiceErrorCode.DataNotFound,
+                    $"does not exist an owner for the User-ID {ownerID}"
+                );
+
+            var result = accounts
+                .Select(account => new GetAccountsByUserIDResponse(
+                    DNI: ownerAccount.DNI,
+                    Correo: ownerAccount.Email,
+                    AccountID: account.ID,
+                    NumeroCuenta: account.Numero,
+                    TipoCuenta: account.Tipo.ToString(),
+                    Moneda: account.Currency.ToString(),
+                    Balance: account.Balance
+                ))
+                .ToList();
+
+            return result;
         }
     }
 }

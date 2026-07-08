@@ -1,6 +1,6 @@
 ﻿namespace ApplicationService.Accounts.DTOs
 {
-    public record GetAccountByDTOResponse(
+    public sealed record GetAccountByIDResponse(
         string DNI,
         string Correo,
         int AccountID,

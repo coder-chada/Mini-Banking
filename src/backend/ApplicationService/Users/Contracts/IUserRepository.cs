@@ -4,10 +4,14 @@ namespace ApplicationService.Users.Contracts
 {
     public interface IUserRepository
     {
-        Task<User> GetUserBy(int id,
-                             CancellationToken cancellationToken = default);
+        Task<User> GetBy(
+            int userID,
+            CancellationToken cancellationToken = default
+        );
 
-        Task<Func<int>> AddUserAsync(User user,
-                                     CancellationToken cancellationToken = default);
+        Task<Func<int>> AddAsync(
+            User user,
+            CancellationToken cancellationToken = default
+        );
     }
 }

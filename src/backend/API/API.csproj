@@ -11,6 +11,7 @@
     <PackageReference Include="asp.versioning.mvc" Version="10.0.0" />
     <PackageReference Include="asp.versioning.mvc.apiexplorer" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Swashbuckle.aspnetcore" Version="10.2.3" />
   </ItemGroup>
 
   <ItemGroup>

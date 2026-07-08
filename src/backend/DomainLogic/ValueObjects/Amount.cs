@@ -2,7 +2,7 @@
 
 namespace DomainLogic.ValueObjects
 {
-    public class Amount
+    public sealed class Amount
     {
         const decimal MinValue = (decimal)0.01;
         public decimal Value { get; private set; }
