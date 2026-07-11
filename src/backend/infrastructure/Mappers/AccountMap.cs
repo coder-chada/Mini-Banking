@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure.PersistenceModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Infrastructure.PersistenceModels;
 
 namespace Infrastructure.Mappers
 {
@@ -14,8 +14,8 @@ namespace Infrastructure.Mappers
 
             builder.Property(p => p.ID)
                 .HasColumnName("ACCOUNT_ID")
-                .ValueGeneratedOnAdd()
-                .UseIdentityColumn();
+                .ValueGeneratedOnAdd();
+            //.UseIdentityColumn();
 
             builder.Property(p => p.Numero)
                 .HasColumnName("NUMERO_CUENTA");
