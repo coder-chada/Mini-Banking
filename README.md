@@ -4,31 +4,37 @@ The core backend for a digital wallet. Users can deposit, withdraw, and transfer
 
 ## Table of contents
 - [Goals](#goals)
+- [Project Planning (Jira)](#Project-Planning-(Jira))
 - [Architecture](#architecture)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Run locally](#run-locally)
 - [API usage](#api-usage)
-- [Testing](#testing)
-- [Notes for reviewers / maintainers](#notes-for-reviewers--maintainers)
-- [License](#license)
-- [Contact](#contact)
 
 ## Goals
 - Provide a simple, production-minded backend for a wallet: account creation, deposit, withdraw, and transfer.
 - Demonstrate clear layering (API → Application → Domain → Infrastructure), testability, and operational considerations (idempotency, error handling, API versioning, OpenAPI).
 
+## Project Planning (Jira)
+This project was managed using Jira to simulate a real software team's workflow. Work was organized into Epics, User Stories, and Tasks to demonstrate backlog refinement, feature decomposition, and incremental delivery
+
+<img width="1813" height="700" alt="image" src="https://github.com/user-attachments/assets/65050ffc-89e8-458e-a36b-a3c65ee143c4" />
+
+linking commits to Jira issues
+<img width="1717" height="814" alt="image" src="https://github.com/user-attachments/assets/6f6b1daf-57c7-4d2c-945d-743be3c0910d" />
+
 ## Architecture
 The codebase is organized into separate projects under `src/backend/`:
-- `API/` — ASP.NET Core HTTP API project. Contains `Program.cs`, controllers, OpenAPI exposure, and request samples (`API.http`).
-- `ApplicationService/` — Application-level services (use-cases) and DTOs. Example: `accounts/Services/AccountService.cs`.
-- `DomainLogic/` — Domain models and business rules.
+- `API/` — ASP.NET Core HTTP API project. Contains middlewares, controllers, OpenAPI exposure.
+- `ApplicationService/` — Application-level services (use-cases) and DTOs.
+- `DomainLogic/` — Domain models, business rules and domain events.
 - `infrastructure/` — Persistence, external integrations, and DI wiring.
 - `tests/` — Automated tests (unit/integration as applicable).
 
 Key runtime pieces:
-- `Program.cs` configures services, registers MediatR handlers, enables API versioning and OpenAPI, applies middlewares (`GlobalException`, `IdempotencyMiddleware`) and maps controllers.
-- Commands/queries are handled via MediatR; controllers delegate to application services or MediatR requests.
+- Each library project organizes its dependency injection registrations by using a registration class.
+- `Program.cs` configures services, enables API versioning, applies middlewares (`GlobalException`, `IdempotencyMiddleware`) and maps controllers.
+- Domain events are handled via MediatR.
 
 ## Features
 - Account lifecycle: create accounts and query balances
