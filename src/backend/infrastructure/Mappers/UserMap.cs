@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure.PersistenceModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Infrastructure.PersistenceModels;
 
 namespace Infrastructure.Mappers
 {
@@ -10,12 +10,12 @@ namespace Infrastructure.Mappers
         {
             builder.ToTable("USUARIOS", "DEV");
 
-            builder.HasKey(p => p.ID); 
+            builder.HasKey(p => p.ID);
 
             builder.Property(p => p.ID)
                 .HasColumnName("USUARIO_ID")
-                .ValueGeneratedOnAdd()
-                .UseIdentityColumn();
+                .ValueGeneratedOnAdd();
+            //.UseIdentityColumn();
 
             builder.Property(p => p.DNI)
                 .HasColumnName("DNI");
