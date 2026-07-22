@@ -1,0 +1,50 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# IDE / editor folders
+**/.vs/
+**/.vscode/
+**/.idea/
+*.user
+*.suo
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker files themselves (no need to copy into the image)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Test results / coverage
+**/TestResults/
+**/*.trx
+**/coverage/
+
+# NuGet
+**/*.nupkg
+**/packages/
+**/.nuget/
+
+# Logs
+**/*.log
+**/logs/
+
+# OS junk
+**/.DS_Store
+**/Thumbs.db
+
+# Docs/misc (optional — skip if you don't want these excluded)
+README.md
+*.md
+LICENSE
+
+# Environment / secrets — never bake these into an image
+.env
+**/appsettings.Development.json
+**/secrets.json
