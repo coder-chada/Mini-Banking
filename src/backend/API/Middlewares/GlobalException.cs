@@ -1,4 +1,5 @@
 ﻿using ApplicationService.Common.Exceptions;
+using DomainLogic.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Middlewares
@@ -31,22 +32,31 @@ namespace API.Middlewares
 
         private async Task GenerateErrorResponse(HttpContext context, Exception ex)
         {
-            var statusCode = (ex) switch
+            var (errorStatusCode, errorMessage) = (ex) switch
             {
-                ApplicationServiceException => StatusCodes.Status404NotFound,
-                _ => StatusCodes.Status500InternalServerError
+                DomainLogicException domEx => (domEx.ErrorCode) switch
+                {
+                    _ => (StatusCodes.Status422UnprocessableEntity, domEx.Details)
+                },
+                ApplicationServiceException appEx => (appEx.Code) switch
+                {
+                    ApplicationServiceErrorCode.MissingOrInvalidData => (StatusCodes.Status400BadRequest, appEx.Message),
+                    ApplicationServiceErrorCode.DataNotFound => (StatusCodes.Status404NotFound, appEx.Message),
+                    ApplicationServiceErrorCode.IdempotencyConflict => (StatusCodes.Status409Conflict, appEx.Message),
+                    ApplicationServiceErrorCode.IdempotencyInvalid => (StatusCodes.Status400BadRequest, appEx.Message),
+                    _ => (StatusCodes.Status500InternalServerError, "The problem was sent to the IT Department for help")
+                },
+                _ => (StatusCodes.Status500InternalServerError, "The problem was sent to the IT Department for help")
             };
-
-            var detail = statusCode == StatusCodes.Status500InternalServerError ? "The problem was sent to the IT Department for help" : ex.Message;
 
             var problemDetails = new ProblemDetails();
 
-            problemDetails.Status = statusCode;
-            problemDetails.Title = "Unhandled exception ocurred";
-            problemDetails.Detail = detail;
+            problemDetails.Status = errorStatusCode;
+            problemDetails.Title = "An exception occurred";
+            problemDetails.Detail = errorMessage;
 
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = statusCode;
+            context.Response.StatusCode = errorStatusCode;
 
             await context.Response.WriteAsJsonAsync(problemDetails);
         }
