@@ -13,6 +13,7 @@ namespace DomainLogic.Entities
         public DateTime CreatedAt { get; private set; }
         public DateTime CompletedAt { get; private set; }
         public DateTime ExpiresAt { get; private set; }
+        public bool IsAlreadyClaimed { get; private set; } = false; // tke imdepotency-key already exists in the database
 
         public Idempotency(string key, string requestHash)
         {
@@ -95,6 +96,11 @@ namespace DomainLogic.Entities
                                                message: "Status code cannot be negative");
 
             this.StatusCode = statusCode;
+        }
+
+        public void SetAsClaimed()
+        {
+            this.IsAlreadyClaimed = true;
         }
     }
 }
