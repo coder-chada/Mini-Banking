@@ -15,21 +15,52 @@ namespace Infrastructure.Repositories
             this._myDBContext = myDBContext;
         }
 
-        public async Task CreateInProgressAsync(
+        public async Task<Idempotency> TryCreateAsync(
             string key,
             string requestHash,
             CancellationToken cancellationToken = default
         )
         {
-            var idempotencyEntity = new IdempotencyEntity();
+            try
+            {
+                var rowsInserted = await _myDBContext.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO 
+                        (idempotency_key
+                        , request_hash
+                        , status)
+                    VALUES
+                        ({key}
+                        , {requestHash}
+                        , {(int)IdempotencyStatus.InProgress});
+                    ON CONFLICT (idempotency_key) DO NOTHING
+                    ", cancellationToken).ConfigureAwait(false);
 
-            idempotencyEntity.idempotency_key = key;
-            idempotencyEntity.request_hash = requestHash;
-            idempotencyEntity.status = (int)IdempotencyStatus.InProgress;
+                var idempotency = await GetByAsync(
+                    key: key, 
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            await _myDBContext
-                .Idempotency.AddAsync(idempotencyEntity, cancellationToken)
-                .ConfigureAwait(false);
+                if (idempotency is null)
+                {
+                    throw new Exception("idempotency exists, but it can not get it");
+                }
+
+                if (rowsInserted == 0)
+                {
+                    idempotency.SetAsClaimed(); // row already existed
+                }
+
+                return idempotency;
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        private Idempotency TurnIntoIdempotency(IdempotencyEntity value)
+        {
+            var idempotency = new Idempotency(key: value.idempotency_key, requestHash: value.request_hash);
+            return idempotency;
         }
 
         public async Task<Idempotency?> GetByAsync(

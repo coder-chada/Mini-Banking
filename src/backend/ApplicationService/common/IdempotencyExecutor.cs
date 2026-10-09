@@ -24,13 +24,10 @@ namespace ApplicationService.Common
         {
             ValidateKeyRequestHash(key, requestHash);
 
-            Idempotency? idempotency = await GetIdempotencyBy(
-                    key: key,
-                    cancellationToken: cancellationToken
-                )
-                .ConfigureAwait(false);
+            Idempotency idempotency = await TryClaimIdempotencyAsync(key, requestHash, cancellationToken)
+                    .ConfigureAwait(false);
 
-            if (idempotency is not null)
+            if (idempotency.Status == IdempotencyStatus.Completed || idempotency.Status == IdempotencyStatus.Failed)
             {
                 ValidateIdempotency(requestHash, idempotency);
 
@@ -44,17 +41,17 @@ namespace ApplicationService.Common
                 return result;
             }
 
-            bool idempotencyClaimed = false;
+            if (idempotency.Status == IdempotencyStatus.InProgress && idempotency.IsAlreadyClaimed)
+            {
+                throw new ApplicationServiceException(
+                    ApplicationServiceErrorCode.IdempotencyConflict,
+                    $"the idempotency {key} was already claimed, try the action with a new idempotency key"
+                );
+            }
 
             try
             {
-                idempotency = new Idempotency(key, requestHash);
-
                 await _unitOfWork.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-
-                // Claim idempotency for this request
-                idempotencyClaimed = await ClaimIdempotencyAsync(idempotency, cancellationToken)
-                    .ConfigureAwait(false);
 
                 // Execute business logic and persist changes
                 var response = await businessLogicFunction(cancellationToken).ConfigureAwait(false);
@@ -74,14 +71,9 @@ namespace ApplicationService.Common
             }
             catch (Exception)
             {
-                await _unitOfWork.RollbackTransactionAsync(cancellationToken).ConfigureAwait(false);
+                await _unitOfWork.RollbackTransactionAsync(CancellationToken.None).ConfigureAwait(false);
 
-                // Mark idempotency as failed only if it was claimed earlier
-                await MarkIdempotencyFailedIfClaimedAsync(
-                        key,
-                        idempotencyClaimed,
-                        cancellationToken
-                    )
+                await MarkIdempotencyFailedIfClaimedAsync(key, CancellationToken.None)
                     .ConfigureAwait(false);
 
                 throw;
@@ -128,20 +120,21 @@ namespace ApplicationService.Common
                 );
         }
 
-        private async Task<bool> ClaimIdempotencyAsync(
-            Idempotency idempotency,
+        private async Task<Idempotency> TryClaimIdempotencyAsync(
+            string key,
+            string requestHash,
             CancellationToken cancellationToken
         )
         {
-            await _unitOfWork
-                .IdempotencyRepository.CreateInProgressAsync(
-                    idempotency.Key,
-                    idempotency.RequestHash,
+            var idempotency = await _unitOfWork.IdempotencyRepository
+                .TryCreateAsync(
+                    key,
+                    requestHash,
                     cancellationToken
                 )
                 .ConfigureAwait(false);
 
-            return true;
+            return idempotency;
         }
 
         private async Task PersistIdempotencySuccessAsync(
@@ -163,13 +156,9 @@ namespace ApplicationService.Common
 
         private async Task MarkIdempotencyFailedIfClaimedAsync(
             string key,
-            bool claimed,
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken = default
         )
         {
-            if (!claimed)
-                return;
-
             try
             {
                 await _unitOfWork
